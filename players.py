@@ -1,4 +1,5 @@
 import random
+from basic_strategy import Action
 
 # TODO:
 # For every move we need to compare it with the strategy chart
@@ -44,9 +45,9 @@ def _get_total(hand):
 
 
 class Hand:
-    def __init__(self, cards, rule="H17"):
-        self.cards = cards
-        self.rule = rule
+    def __init__(self, cards: list[str]):
+        self.cards: list[str] = cards
+        self.is_hit: bool = False
         self.recompute()
 
     def recompute(self):
@@ -55,8 +56,8 @@ class Hand:
         self.busted = False
 
     @classmethod
-    def deal_initial(cls, rule="H17"):
-        return cls([random.choice(ranks) for _ in range(2)], rule)
+    def deal_initial(cls):
+        return cls([random.choice(ranks) for _ in range(2)])
 
     def bust_update(self):
         if self.total > 21:
@@ -68,8 +69,21 @@ class Hand:
     def get_total(self):
         return self.total
 
+    def get_hand_type(self):
+        is_ace_in_hand = isinstance(self.value, tuple)
+        if not is_ace_in_hand:
+            return "hard"
+
+        soft_total = self.value[1]
+        hard_total = self.value[0]
+        if soft_total <= 21:
+            return "soft"
+        else:
+            return "hard"
+
     def hit(self):
-        # Can only hit if not busted
+        self.is_hit = True
+        # Can only hit if not busted and can only be busted if hit
         if self.busted:
             return
 
@@ -81,13 +95,22 @@ class Hand:
 
 
 class DealerHand(Hand):
+    def __init__(self, cards, rule):
+        super().__init__(cards)
+        self.rule = rule
+
     @classmethod
-    def deal_initial(cls, rule="H17"):
+    def deal_initial(cls, card: str = None, rule="H17"):
+        if card is not None:
+            return cls([card], rule)
         return cls([random.choice(ranks)], rule)
 
     def reset(self):
         self.cards = [random.choice(ranks)]
         self.recompute()
+
+    def get_upcard(self):
+        return self.cards[0]
 
     def dealer_hitting_condition(self):
         is_ace_in_hand = isinstance(self.value, tuple)
@@ -114,7 +137,7 @@ class DealerHand(Hand):
 
 
 class Player:
-    def __init__(self, init_hand=None):
+    def __init__(self, init_hand: Hand = None):
         if init_hand is None:
             self.hands: list[Hand] = [Hand.deal_initial()]
         else:
@@ -156,10 +179,13 @@ class Player:
             is_push = push(hand, dealer)
             if is_win:
                 self.wins += 1
+                return "w"
             elif is_push:
                 self.pushes += 1
+                return "p"
             else:
                 self.losses += 1
+                return "l"
 
     def split(self):
         active_hand = self.active_hand()

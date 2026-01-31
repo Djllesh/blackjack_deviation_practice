@@ -1,10 +1,11 @@
-import random
 import tkinter as tk
-from tkinter import ttk, StringVar, IntVar
+from tkinter import ttk, StringVar
+from tkinter import font as tkFont
 from players import Player, DealerHand, Hand
+from rules import Rules
 
 
-def stand(player: Player, dealer_hand: DealerHand):
+def stand(player: Player, dealer_hand: DealerHand, rules: Rules):
     if player.can_finish():
         dealer_hand.finish()
         dealer_hand_str.set(f"Dealer {dealer_hand.cards}")
@@ -23,27 +24,27 @@ def stand(player: Player, dealer_hand: DealerHand):
         player.next()
 
 
-def hit(player: Player, dealer_hand: DealerHand):
+def hit(player: Player, dealer_hand: DealerHand, rules: Rules):
     player.active_hand().hit()
     player_hand_str.set(f"Player {player.show_hands()}")
     if player.active_hand().is_busted():
-        stand(player, dealer_hand)
+        stand(player, dealer_hand, rules)
 
 
-def double(player: Player, dealer_hand: DealerHand):
+def double(player: Player, dealer_hand: DealerHand, rules: Rules):
     player.active_hand().hit()
     player_hand_str.set(f"Player {player.show_hands()}")
-    stand(player, dealer_hand)
+    stand(player, dealer_hand, rules)
 
 
-def split(player: Player, dealer_hand: DealerHand):
+def split(player: Player, dealer_hand: DealerHand, rules: Rules):
     player.split()
     player_hand_str.set(f"Player {player.show_hands()}")
 
 
-def surrender(player: Player, dealer_hand: DealerHand):
+def surrender(player: Player, dealer_hand: DealerHand, rules: Rules):
     # for now equivalent to standing
-    stand(player, dealer_hand)
+    stand(player, dealer_hand, rules)
 
 
 def reset(player: Player, dealer_hand: DealerHand):
@@ -73,8 +74,12 @@ def enable_all():
 if __name__ == "__main__":
     root = tk.Tk()
 
-    player = Player(init_hand=Hand(["J", "Q"]))
-    dealer_hand = DealerHand.deal_initial()
+    s = ttk.Style()
+    s.configure("my.TButton", font=("Helvetica", 18))
+
+    rules = Rules.from_ruleset("H17_4_DAS_peek")
+    player = Player()
+    dealer_hand = DealerHand.deal_initial(rule=rules.soft17)
 
     player_hand_str = StringVar()
     player_hand_str.set(f"Player {player.show_hands()}")
@@ -82,37 +87,56 @@ if __name__ == "__main__":
     dealer_hand_str = StringVar()
     dealer_hand_str.set(f"Dealer {dealer_hand.cards}")
 
-    dealer_label = ttk.Label(root, textvariable=dealer_hand_str)
+    dealer_label = ttk.Label(
+        root, textvariable=dealer_hand_str, font=("Helvetica", 18)
+    )
     dealer_label.pack()
-    player_label = ttk.Label(root, textvariable=player_hand_str)
+    player_label = ttk.Label(
+        root, textvariable=player_hand_str, font=("Helvetica", 18)
+    )
     player_label.pack()
 
     # Count the player total, finish the dealer
     stand_button = ttk.Button(
-        root, text="Stand", command=lambda: stand(player, dealer_hand)
+        root,
+        text="Stand",
+        command=lambda: stand(player, dealer_hand, rules),
+        style="my.TButton",
     )
     stand_button.pack()
 
     hit_button = ttk.Button(
-        root, text="Hit", command=lambda: hit(player, dealer_hand)
+        root,
+        text="Hit",
+        command=lambda: hit(player, dealer_hand, rules),
+        style="my.TButton",
     )
     hit_button.pack()
 
     # Hit one card, count total, finish the dealer
     double_button = ttk.Button(
-        root, text="Double", command=lambda: double(player, dealer_hand)
+        root,
+        text="Double",
+        command=lambda: double(player, dealer_hand, rules),
+        style="my.TButton",
     )
     double_button.pack()
 
     # Create two hands and keep the play sequential
     split_button = ttk.Button(
-        root, text="Split", command=lambda: split(player, dealer_hand)
+        root,
+        text="Split",
+        command=lambda: split(player, dealer_hand, rules),
+        style="my.TButton",
     )
     split_button.pack()
 
     # Deal no cards, finish the dealer
     surrender_button = ttk.Button(
-        root, text="Surrender", command=lambda: surrender(player, dealer_hand)
+        root,
+        text="Surrender",
+        command=lambda: surrender(player, dealer_hand, rules),
+        style="my.TButton",
     )
     surrender_button.pack()
 
