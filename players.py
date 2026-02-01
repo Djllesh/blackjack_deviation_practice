@@ -70,6 +70,9 @@ class Hand:
         return self.total
 
     def get_hand_type(self):
+        if len(self.cards) == 2 and self.cards[0] == self.cards[1]:
+            return "pair"
+
         is_ace_in_hand = isinstance(self.value, tuple)
         if not is_ace_in_hand:
             return "hard"
@@ -81,23 +84,40 @@ class Hand:
         else:
             return "hard"
 
-    def hit(self):
+    def hit(self, card: str = None):
         self.is_hit = True
         # Can only hit if not busted and can only be busted if hit
         if self.busted:
             return
 
-        new_card = random.choice(ranks)
+        if card is not None:
+            new_card = card
+        else:
+            new_card = random.choice(ranks)
         self.cards.append(new_card)
         self.value = update_total(self.cards)
         self.total = _get_total(self)
         self.bust_update()
+
+    def resolve(self, dealer):
+        if not dealer.finished:
+            return None
+
+        is_win = win(self, dealer)
+        is_push = push(self, dealer)
+        if is_win:
+            return "w"
+        elif is_push:
+            return "p"
+        else:
+            return "l"
 
 
 class DealerHand(Hand):
     def __init__(self, cards, rule):
         super().__init__(cards)
         self.rule = rule
+        self.finished = False
 
     @classmethod
     def deal_initial(cls, card: str = None, rule="H17"):
@@ -134,6 +154,7 @@ class DealerHand(Hand):
     def finish(self):
         while self.dealer_hitting_condition():
             self.hit()
+        self.finished = True
 
 
 class Player:
@@ -174,18 +195,21 @@ class Player:
         self.active += 1
 
     def resolve(self, dealer: DealerHand):
+        if not dealer.finished:
+            return None
+
         for hand in self.hands:
-            is_win = win(hand, dealer)
-            is_push = push(hand, dealer)
-            if is_win:
+            result = hand.resolve(dealer)
+            if result == "w":
                 self.wins += 1
-                return "w"
-            elif is_push:
+            elif result == "p":
                 self.pushes += 1
-                return "p"
-            else:
+            elif result == "l":
                 self.losses += 1
-                return "l"
+            else:
+                raise ValueError(
+                    f"Something went wrong when resolving the hand. Result {result}"
+                )
 
     def split(self):
         active_hand = self.active_hand()

@@ -9,6 +9,8 @@ class Rules:
         decks: int = 4,
         das: str = "DAS",
         peek: str = "peek",
+        *,
+        surrender: bool = True,
     ):
         if soft17 in ["S17", "H17"]:
             self.soft17 = soft17
@@ -26,9 +28,10 @@ class Rules:
             self.peek = peek
         else:
             raise InvalidRuleset(f"Unknown peek rule: {peek}")
+        self.surrender = surrender
 
     @classmethod
-    def from_ruleset(cls, ruleset: str):
+    def from_ruleset(cls, ruleset: str, *, surrender: bool = True):
         rules = ruleset.split("_")
         if len(rules) != 4:
             raise InvalidRuleset(
@@ -61,7 +64,9 @@ class Rules:
         if peek is None:
             raise InvalidRuleset("Missing the peek rule")
 
-        return cls(soft17=soft17, decks=decks, das=das, peek=peek)
+        return cls(
+            soft17=soft17, decks=decks, das=das, peek=peek, surrender=surrender
+        )
 
     def ruleset_id(self):
         return f"{self.soft17}_{self.decks}_{self.das}_{self.peek}"

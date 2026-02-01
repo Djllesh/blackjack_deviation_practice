@@ -2,31 +2,25 @@ import pandas as pd
 import pickle
 from collections import defaultdict
 from enum import Enum
+from pathlib import Path
 
 basic_strategy_path = "basic_strategy/basic_strategy.csv"
-
 basic_strategy = defaultdict(list)
 
 
-def load_pickle(path):
-    """Loads a pickle file
-
-    Parameters
-    ----------
-    path : str
-        The full path to the .pickle file that will be loaded
-
-    Returns
-    -------
-    loaded_var :
-        The loaded variable, can be array_like, int, str, dict_to_save,
-        etc.
-    """
-
+def load_pickle(path: Path) -> defaultdict:
+    if not path.exists():
+        raise FileExistsError(
+            f"Basic strategy file not found. Path {str(path)}"
+        )
     with open(path, "rb") as handle:
-        loaded_var = pickle.load(handle)
+        strategy = pickle.load(handle)
+    if not isinstance(strategy, defaultdict):
+        raise TypeError(
+            "Unexpected type of basic strategy object, expected defaultdict."
+        )
 
-    return loaded_var
+    return strategy
 
 
 class Action(Enum):
@@ -38,10 +32,6 @@ class Action(Enum):
     SURRENDER = "r"
     SURRENDER_SPLIT = "rp"
     SURRENDER_STAND = "rs"
-
-
-def generate_key():
-    pass
 
 
 def convert_df_to_dict(df):

@@ -1,34 +1,12 @@
 import sqlite3
+from pathlib import Path
 from itertools import compress
 
-from players import DealerHand, Hand, Player
+from players import DealerHand, Player
 from basic_strategy import Action, load_pickle
 from rules import Rules
 
-sql_command = """INSERT INTO results(
-                 hand_total,
-                 hand_type,
-                 dealer_upcard,
-                 action_played,
-                 ruleset_id,
-                 true_count,
-                 true_action,
-                 result)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
-
-
-def commit_to_db(
-    conn,
-    player: Player,
-    action: Action,
-    dealer: DealerHand,
-    rules: Rules,
-    true_count: int,
-):
-    to_commit = resolve_hand(player, action, dealer, rules, true_count)
-    # cursor = conn.cursor()
-    # cursor.execute(sql_command, to_commit)
-    # conn.commit()
+PICKLE_PATH = Path("data/basic_strategy.pickle")
 
 
 def resolve_hand(
@@ -38,25 +16,13 @@ def resolve_hand(
     rules: Rules,
     true_count: int,
 ) -> tuple:
-    # TODO: Actually resolve the hand!
-    # 1. Check the basic strategy action
-    # 1.1. If the action is two-lettered - check the legality
-    # 1.2. If the action if associated with deviations - check the threshold
-    # 2. Finish the dealer
-    # 3. Check the result
+    bs_key = generate_key(player, dealer, rules)
 
-    active_hand = player.active_hand()
-    bs_key = (
-        active_hand.get_total(),
-        active_hand.get_hand_type(),
-        dealer.get_upcard(),
-        rules.ruleset_id(),
+    true_action = get_legal_action(
+        get_true_action(basic_strategy[bs_key], true_count),
+        rules,
+        player.active_hand().is_hit,
     )
-
-    strategy = basic_strategy[bs_key]
-    true_action = get_true_action(strategy, true_count)
-
-    print("True action: ", true_action, " vs ", "Action played: ", action)
 
     return (
         player.active_hand().get_total(),
@@ -66,7 +32,16 @@ def resolve_hand(
         rules.ruleset_id(),
         true_count,
         true_action.value,
-        "w",
+        player.active_hand().resolve(dealer),
+    )
+
+
+def generate_key(player: Player, dealer: DealerHand, rules: Rules):
+    return (
+        player.active_hand().get_total(),
+        player.active_hand().get_hand_type(),
+        dealer.get_upcard(),
+        rules.ruleset_id(),
     )
 
 
@@ -75,10 +50,42 @@ def get_true_action(strategy: list[dict], true_count: int) -> Action:
     for dev_dict in strategy:
         true_deviations.append(should_deviate(dev_dict, true_count))
 
+    # If at least one of the deviations passes
     if len(true_deviations) != 0 and True in true_deviations:
         return list(compress(strategy, true_deviations))[0]["deviation"]
 
+    # Otherwise a base action
     return strategy[0]["base"]
+
+
+def get_legal_action(
+    true_action: Action, rules: Rules, was_hit: bool
+) -> Action:
+    """Asserts the legality of the action if it happens to be
+    two-lettered or surrendering is not allowed
+    """
+
+    if true_action == Action.DOUBLE_STAND and was_hit:
+        true_action = Action.STAND
+    elif true_action == Action.DOUBLE_STAND and not was_hit:
+        true_action = Action.DOUBLE
+    elif (
+        true_action == Action.SURRENDER_STAND
+        and not was_hit
+        and rules.surrender
+    ):
+        true_action = Action.SURRENDER
+    elif true_action == Action.SURRENDER_STAND and (
+        was_hit or not rules.surrender
+    ):
+        true_action = Action.SURRENDER
+    elif true_action == Action.SURRENDER_SPLIT and rules.surrender:
+        true_action = Action.SURRENDER
+    elif true_action == Action.SURRENDER_SPLIT and not rules.surrender:
+        true_action = Action.SPLIT
+    elif true_action == Action.SURRENDER and not rules.surrender:
+        true_action = Action.HIT
+    return true_action
 
 
 def should_deviate(dev_dict: dict, true_count: int):
@@ -93,30 +100,30 @@ def should_deviate(dev_dict: dict, true_count: int):
 
 
 if __name__ == "__main__":
-    basic_strategy = load_pickle("data/basic_strategy.pickle")
+    basic_strategy = load_pickle(PICKLE_PATH)
     try:
         with sqlite3.connect("data/results.db") as conn:
-            rules = Rules()
-            player = Player(init_hand=Hand(cards=["6", "4"]))
-            dealer_hand = DealerHand.deal_initial(card="10")
-            action = Action.DOUBLE
-            true_count = 3
-
-            cursor = conn.cursor()
-
-            cursor.execute("""CREATE TABLE IF NOT EXISTS results (
-                              id INTEGER PRIMARY KEY,
-                              hand_total INTEGER,
-                              hand_type text,
-                              dealer_upcard INTEGER,
-                              action_played text,
-                              ruleset_id text,
-                              true_count INTEGER,
-                              true_action text,
-                              result text
-                )""")
-
-            commit_to_db(conn, player, action, dealer_hand, rules, true_count)
+            pass
+            # rules = Rules()
+            # player = Player(init_hand=Hand(cards=["J", "6"]))
+            # # player.active_hand().hit(card="2")
+            # dealer_hand = DealerHand.deal_initial(card="A")
+            # action = Action.DOUBLE
+            # true_count = 1
+            #
+            # cursor = conn.cursor()
+            #
+            # cursor.execute("""CREATE TABLE IF NOT EXISTS results (
+            #                   id INTEGER PRIMARY KEY,
+            #                   hand_total INTEGER,
+            #                   hand_type text,
+            #                   dealer_upcard INTEGER,
+            #                   action_played text,
+            #                   ruleset_id text,
+            #                   true_count INTEGER,
+            #                   true_action text,
+            #                   result text
+            #     )""")
 
     except sqlite3.OperationalError as e:
         print("Falied to open a database: ", e)

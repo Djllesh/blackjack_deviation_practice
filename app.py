@@ -44,6 +44,8 @@ def split(player: Player, dealer_hand: DealerHand, rules: Rules):
 
 def surrender(player: Player, dealer_hand: DealerHand, rules: Rules):
     # for now equivalent to standing
+    if player.active_hand().is_hit or not rules.surrender:
+        return
     stand(player, dealer_hand, rules)
 
 
