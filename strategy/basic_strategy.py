@@ -1,37 +1,11 @@
 import pandas as pd
 import pickle
 from collections import defaultdict
-from enum import Enum
 from pathlib import Path
+from action import Action
 
 basic_strategy_path = "basic_strategy/basic_strategy.csv"
 basic_strategy = defaultdict(list)
-
-
-def load_pickle(path: Path) -> defaultdict:
-    if not path.exists():
-        raise FileExistsError(
-            f"Basic strategy file not found. Path {str(path)}"
-        )
-    with open(path, "rb") as handle:
-        strategy = pickle.load(handle)
-    if not isinstance(strategy, defaultdict):
-        raise TypeError(
-            "Unexpected type of basic strategy object, expected defaultdict."
-        )
-
-    return strategy
-
-
-class Action(Enum):
-    STAND = "s"
-    HIT = "h"
-    DOUBLE = "d"
-    DOUBLE_STAND = "ds"
-    SPLIT = "y"
-    SURRENDER = "r"
-    SURRENDER_SPLIT = "rp"
-    SURRENDER_STAND = "rs"
 
 
 def convert_df_to_dict(df):

@@ -3,8 +3,9 @@ from pathlib import Path
 from itertools import compress
 
 from players import DealerHand, Player
-from basic_strategy import Action, load_pickle
+from basic_strategy import load_pickle
 from rules import Rules
+from strategy.action import Action
 
 PICKLE_PATH = Path("data/basic_strategy.pickle")
 
