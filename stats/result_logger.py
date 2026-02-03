@@ -11,7 +11,7 @@ class ResultLogger:
                       ruleset_id,
                       true_count,
                       true_action,
-                      result)
+                      true_action_source)
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
         self.conn = conn
 

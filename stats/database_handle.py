@@ -1,16 +1,19 @@
 import sqlite3
-from pathlib import Path
 from itertools import compress
+from pathlib import Path
 
-from players import DealerHand, Player
-from basic_strategy import load_pickle
-from rules import Rules
+from model.player import Player
+from model.dealer import DealerHand
+from model.rules import Rules
 from strategy.action import Action
+from strategy.loader import load_pickle
+from collections import defaultdict
 
 PICKLE_PATH = Path("data/basic_strategy.pickle")
 
 
 def resolve_hand(
+    basic_strategy: defaultdict,
     player: Player,
     action: Action,
     dealer: DealerHand,
@@ -19,11 +22,16 @@ def resolve_hand(
 ) -> tuple:
     bs_key = generate_key(player, dealer, rules)
 
+    true_action, action_source = get_true_action(
+        basic_strategy[bs_key], true_count
+    )
+
     true_action = get_legal_action(
-        get_true_action(basic_strategy[bs_key], true_count),
+        true_action,
         rules,
         player.active_hand().is_hit,
     )
+    print(f"True action: {true_action}")
 
     return (
         player.active_hand().get_total(),
@@ -33,7 +41,7 @@ def resolve_hand(
         rules.ruleset_id(),
         true_count,
         true_action.value,
-        player.active_hand().resolve(dealer),
+        action_source,
     )
 
 
@@ -41,22 +49,25 @@ def generate_key(player: Player, dealer: DealerHand, rules: Rules):
     return (
         player.active_hand().get_total(),
         player.active_hand().get_hand_type(),
-        dealer.get_upcard(),
+        dealer.get_total(),
         rules.ruleset_id(),
     )
 
 
-def get_true_action(strategy: list[dict], true_count: int) -> Action:
+def get_true_action(strategy: list[dict], true_count: int) -> tuple:
     true_deviations = []
     for dev_dict in strategy:
         true_deviations.append(should_deviate(dev_dict, true_count))
 
     # If at least one of the deviations passes
     if len(true_deviations) != 0 and True in true_deviations:
-        return list(compress(strategy, true_deviations))[0]["deviation"]
+        return (
+            list(compress(strategy, true_deviations))[0]["deviation"],
+            "deviation",
+        )
 
     # Otherwise a base action
-    return strategy[0]["base"]
+    return (strategy[0]["base"], "base")
 
 
 def get_legal_action(
@@ -70,6 +81,8 @@ def get_legal_action(
         true_action = Action.STAND
     elif true_action == Action.DOUBLE_STAND and not was_hit:
         true_action = Action.DOUBLE
+    elif true_action == Action.DOUBLE and was_hit:
+        true_action = Action.HIT
     elif (
         true_action == Action.SURRENDER_STAND
         and not was_hit
@@ -79,12 +92,12 @@ def get_legal_action(
     elif true_action == Action.SURRENDER_STAND and (
         was_hit or not rules.surrender
     ):
-        true_action = Action.SURRENDER
+        true_action = Action.STAND
     elif true_action == Action.SURRENDER_SPLIT and rules.surrender:
         true_action = Action.SURRENDER
     elif true_action == Action.SURRENDER_SPLIT and not rules.surrender:
         true_action = Action.SPLIT
-    elif true_action == Action.SURRENDER and not rules.surrender:
+    elif true_action == Action.SURRENDER and (not rules.surrender or was_hit):
         true_action = Action.HIT
     return true_action
 

@@ -11,7 +11,7 @@ needed = {
     "ruleset_id",
     "true_count",
     "true_action",
-    "result",
+    "true_action_source",
 }
 
 
@@ -30,7 +30,7 @@ def open_results_db(
                     ruleset_id text NOT NULL,
                     true_count INTEGER NOT NULL,
                     true_action text NOT NULL,
-                    result text NOT NULL""")
+                    true_action_source text NOT NULL)""")
     conn.commit()
     require_columns(conn, table, needed)
     return conn
