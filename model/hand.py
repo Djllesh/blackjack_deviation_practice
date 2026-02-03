@@ -3,7 +3,7 @@ from model.draw import draw
 from model.total import update_total, _get_total
 
 if TYPE_CHECKING:
-    from dealerhand import DealerHand
+    from model.dealerhand import DealerHand
 
 
 class Hand:

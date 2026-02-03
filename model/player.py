@@ -56,10 +56,10 @@ class Player:
                     f"Something went wrong when resolving the hand. Result {result}"
                 )
 
-    def split(self):
+    def can_split(self):
         active_hand = self.active_hand()
         if len(active_hand.cards) != 2:
-            return
+            return False
 
         are_tens = active_hand.cards[0] in [
             "J",
@@ -70,13 +70,21 @@ class Player:
 
         if not are_tens and active_hand.cards[0] != active_hand.cards[1]:
             # TODO: Let the player know that they can't split
+            return False
+
+        return True
+
+    def split(self):
+        if not self.can_split():
             return
 
+        active_hand = self.active_hand()
         card = active_hand.cards[1]
         active_hand.cards.pop(1)
         self.hands.insert(self.active + 1, Hand([card]))
         for i in range(self.active, self.active + 2):
             self.hands[i].hit()
+        return True
 
     def can_finish(self):
         if len(self.hands) == 1 or self.active == len(self.hands) - 1:

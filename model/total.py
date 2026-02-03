@@ -3,7 +3,7 @@ from model.draw import values
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from dealerhand import Hand
+    from model.dealerhand import Hand
 
 
 def update_total(cards: list[str]):
