@@ -6,7 +6,7 @@ from stats.open_results import open_results_db
 from stats.result_logger import ResultLogger
 from strategy.action import Action  # noqa: F401
 from strategy.loader import load_pickle
-from ui.play_frame import PlayFrame
+from strategy.basic_strategy import generate_dict
 from ui.app import App
 
 from model.player import Player
@@ -17,6 +17,7 @@ from model.rules import Rules
 BASIC_STRATEGY_PATH = Path("data/basic_strategy.pickle")
 
 if __name__ == "__main__":
+    generate_dict()
     player = Player(init_hand=Hand(cards=["A", "8"]))
     dealer = DealerHand.deal_initial(card="6")
     rules = Rules(soft17="H17", das="DAS")

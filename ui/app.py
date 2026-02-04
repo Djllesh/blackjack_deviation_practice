@@ -11,6 +11,7 @@ class App(tk.Tk):
         super().__init__()
         self.title("Blackjack Deviation Practice")
         self.geometry("800x600")
+        self.minsize(600, 600)
         self.container = tk.Frame(self)
         self.container.pack(side="top", fill="both", expand=True)
         self.container.grid_rowconfigure(0, weight=1)
@@ -31,3 +32,5 @@ class App(tk.Tk):
     def show_frame(self, name):
         frame = self.frames[name]
         frame.tkraise()
+        super().update()
+        frame.raised()

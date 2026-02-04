@@ -49,6 +49,9 @@ class AppController:
     def get_state(self):
         return self.state
 
+    def update_rules(self, ruleset: str):
+        self.rules = Rules.from_ruleset(ruleset)
+
     def begin_round(self):
         self.logger.begin_round()
         self.round_finished = False

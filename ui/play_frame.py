@@ -12,6 +12,7 @@ class PlayFrame(tk.Frame):
         self.result_str = StringVar()
         self.wpl_str = StringVar()
         self.true_count_str = StringVar()
+        self.ruleset_str = StringVar()
         self.set_strings()
         s = ttk.Style()
         s.configure("my.TButton", font=("Helvetica", 18))
@@ -19,8 +20,12 @@ class PlayFrame(tk.Frame):
         self.create_buttons()
         self.create_bottom_labels()
 
+    def raised(self):
+        self.set_strings()
+
     def set_strings(self):
         state = self.controller.get_state()
+        self.ruleset_str.set(self.controller.rules.ruleset_id())
         self.player_hand_str.set(state["player_hand_str"])
         self.dealer_hand_str.set(state["dealer_hand_str"])
         self.true_count_str.set(state["true_count_str"])
@@ -44,6 +49,8 @@ class PlayFrame(tk.Frame):
         self.true_count_label.pack()
         self.result_label = tk.Label(self, textvariable=self.result_str)
         self.result_label.pack()
+        self.ruleset_label = tk.Label(self, textvariable=self.ruleset_str)
+        self.ruleset_label.pack()
         self.wpl_label = tk.Label(self, textvariable=self.wpl_str)
         self.wpl_label.pack()
 

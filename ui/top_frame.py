@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 
 
 class TopFrame(tk.Frame):
@@ -12,18 +13,25 @@ class TopFrame(tk.Frame):
         self.grid_columnconfigure(index=2, weight=1)
 
     def render_buttons(self):
-        play_button = tk.Button(
-            self, text="Play", command=lambda: self.app.show_frame("PlayFrame")
+        s = ttk.Style()
+        s.configure("my.TButton", font=("Helvetica", 24))
+        play_button = ttk.Button(
+            self,
+            text="Play",
+            command=lambda: self.app.show_frame("PlayFrame"),
+            style="my.TButton",
         )
-        table_button = tk.Button(
+        table_button = ttk.Button(
             self,
             text="Table",
             command=lambda: self.app.show_frame("TableFrame"),
+            style="my.TButton",
         )
-        stats_button = tk.Button(
+        stats_button = ttk.Button(
             self,
             text="Stats",
             command=lambda: self.app.show_frame("StatsFrame"),
+            style="my.TButton",
         )
         play_button.grid(row=0, column=0, sticky="nsew")
         table_button.grid(row=0, column=1, sticky="nsew")
