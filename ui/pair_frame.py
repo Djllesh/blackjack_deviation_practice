@@ -25,7 +25,7 @@ class PairFrame(tk.Frame):
         self.canvas = TableCanvas(
             parent=self,
             bg="white",
-            rows=11,
+            rows=len(pair_totals) + 1,
             cols=11,
             controller=controller,
             player_totals=pair_totals,

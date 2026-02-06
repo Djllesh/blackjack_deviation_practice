@@ -9,8 +9,6 @@ soft_totals = [
     17,
     18,
     19,
-    20,
-    21,
 ]
 
 
@@ -24,7 +22,7 @@ class SoftFrame(tk.Frame):
         self.canvas = TableCanvas(
             parent=self,
             bg="white",
-            rows=10,
+            rows=len(soft_totals) + 1,
             cols=11,
             controller=controller,
             player_totals=soft_totals,

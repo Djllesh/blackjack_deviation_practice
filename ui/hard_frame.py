@@ -16,8 +16,6 @@ hard_totals = [
     16,
     17,
     18,
-    19,
-    20,
 ]
 
 
@@ -31,7 +29,7 @@ class HardFrame(tk.Frame):
         self.canvas = TableCanvas(
             parent=self,
             bg="white",
-            rows=17,
+            rows=len(hard_totals) + 1,
             cols=11,
             controller=controller,
             player_totals=hard_totals,
