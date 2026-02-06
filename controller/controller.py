@@ -148,7 +148,8 @@ class AppController:
     def reset(self):
         self.player.reset()
         self.dealer.reset()
-        self.state["player_hand_str"] = f"Player {self.player.show_hands()}"
-        self.state["dealer_hand_str"] = f"Dealer {self.dealer.cards}"
+        self.true_count = random.randint(-3, 6)
+        self.state["true_count_str"] = f"True count: {self.true_count}"
+        self.set_state_players()
         self.state["buttons_enabled"] = True
         self.begin_round()
