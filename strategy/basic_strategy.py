@@ -17,7 +17,6 @@ def convert_df_to_dict(df):
     df["hand_total"] = df["hand_total"].astype(int)
     df["index"] = pd.to_numeric(df["index"], errors="coerce")
 
-    rulesets = []
     for _, row in df.iterrows():
         key = (
             row["hand_total"],
@@ -25,7 +24,6 @@ def convert_df_to_dict(df):
             row["dealer_upcard"],
             row["ruleset_id"],
         )
-        rulesets.append(row["ruleset_id"])
 
         basic_strategy[key].append(
             {
@@ -37,8 +35,6 @@ def convert_df_to_dict(df):
                 else None,
             }
         )
-
-    print(len(set(rulesets)))
 
 
 def generate_dict():
