@@ -124,41 +124,111 @@ class TableCanvas(tk.Canvas):
         self.cols = cols
         self.make_grid(None)
         self.bind("<Configure>", self.make_grid)
+        self.bind("<Motion>", self.on_motion)
+        self.bind("<Leave>", self.on_leave)
+        self.bind("<Enter>", self.on_enter)
+        self.previous_active_row = None
+        self.previous_active_col = None
+        self.previous_active_rect = None
+
+    def get_position_on_grid(self, event):
+        on_grid = (
+            event.x > self.rectangle_width and event.y > self.rectangle_height
+        )
+        if not on_grid:
+            return False
+        self.active_row = int(event.y / self.rectangle_height)
+        self.active_col = int(event.x / self.rectangle_width)
+        return True
+
+    def on_enter(self, event):
+        result = self.get_position_on_grid(event)
+        if not result:
+            return
+        self.active_rect = self.create_rectangle(
+            self.active_col * self.rectangle_width,
+            self.active_row * self.rectangle_height,
+            (self.active_col + 1) * self.rectangle_width,
+            (self.active_row + 1) * self.rectangle_height,
+        )
+        self.previous_active_col = self.active_col
+        self.previous_active_row = self.active_row
+        self.previous_active_rect = self.active_rect
+
+    def on_leave(self, event):
+        if self.previous_active_rect is not None:
+            self.delete(self.previous_active_rect)
+            self.previous_active_rect = None
+
+    def on_motion(self, event):
+        result = self.get_position_on_grid(event)
+        if not result:
+            self.on_leave(event)
+            return
+        if self.previous_active_rect is None:
+            self.active_rect = self.create_rectangle(
+                self.active_col * self.rectangle_width,
+                self.active_row * self.rectangle_height,
+                (self.active_col + 1) * self.rectangle_width,
+                (self.active_row + 1) * self.rectangle_height,
+            )
+        elif (
+            self.active_col != self.previous_active_col
+            or self.active_row != self.previous_active_row
+        ):
+            self.delete(self.previous_active_rect)
+            self.active_rect = self.create_rectangle(
+                self.active_col * self.rectangle_width,
+                self.active_row * self.rectangle_height,
+                (self.active_col + 1) * self.rectangle_width,
+                (self.active_row + 1) * self.rectangle_height,
+            )
+
+        self.previous_active_col = self.active_col
+        self.previous_active_row = self.active_row
+        self.previous_active_rect = self.active_rect
 
     def make_grid(self, event):
         self.delete("all")
-        rectangle_width = self.parent.winfo_width() / self.cols
-        rectangle_height = self.parent.winfo_height() / self.rows
+        self.rectangle_width = self.parent.winfo_width() / self.cols
+        self.rectangle_height = self.parent.winfo_height() / self.rows
         # number of rows is number of hard totals + 1
         for row in range(self.rows):
             # number of cols is number of dealer upcards + 1
             for col in range(self.cols):
+                if row == 0 and col == 0:
+                    self.create_text(
+                        self.rectangle_width / 2,
+                        self.rectangle_height / 2,
+                        text=get_hand_type(self.parent).upper(),
+                        font=("Helvetica", 8, "bold"),
+                    )
                 if row == 0 and col >= 1:
                     self.create_text(
-                        col * rectangle_width + rectangle_width / 2,
-                        rectangle_height / 2,
+                        col * self.rectangle_width + self.rectangle_width / 2,
+                        self.rectangle_height / 2,
                         text=str(dealer_upcards[col - 1]),
                         font=("Helvetica", 8),
                     )
                     self.create_rectangle(
-                        col * rectangle_width,
-                        row * rectangle_height,
-                        (col + 1) * rectangle_width,
-                        (row + 1) * rectangle_height,
+                        col * self.rectangle_width,
+                        row * self.rectangle_height,
+                        (col + 1) * self.rectangle_width,
+                        (row + 1) * self.rectangle_height,
                     )
 
                 if col == 0 and row >= 1:
                     self.create_text(
-                        rectangle_width / 2,
-                        row * rectangle_height + rectangle_height / 2,
+                        self.rectangle_width / 2,
+                        row * self.rectangle_height + self.rectangle_height / 2,
                         text=str(self.player_totals[row - 1]),
                         font=("Helvetica", 8),
                     )
                     self.create_rectangle(
-                        col * rectangle_width,
-                        row * rectangle_height,
-                        (col + 1) * rectangle_width,
-                        (row + 1) * rectangle_height,
+                        col * self.rectangle_width,
+                        row * self.rectangle_height,
+                        (col + 1) * self.rectangle_width,
+                        (row + 1) * self.rectangle_height,
                     )
 
                 if col >= 1 and row >= 1:
@@ -180,31 +250,35 @@ class TableCanvas(tk.Canvas):
                         ruleset=self.controller.rules.ruleset_id(),
                     )
                     self.create_rectangle(
-                        col * rectangle_width,
-                        row * rectangle_height,
-                        (col + 1) * rectangle_width,
-                        (row + 1) * rectangle_height,
+                        col * self.rectangle_width,
+                        row * self.rectangle_height,
+                        (col + 1) * self.rectangle_width,
+                        (row + 1) * self.rectangle_height,
                         fill=color,
                         width=0,
+                        tag="rect",
                     )
                     if deviations is not None:
                         for idx, (dev, dev_col) in enumerate(
                             zip(deviations, dev_colors)
                         ):
                             self.create_text(
-                                col * rectangle_width
+                                col * self.rectangle_width
                                 + (idx + 1)
-                                * rectangle_width
+                                * self.rectangle_width
                                 / (len(deviations) + 1),
-                                row * rectangle_height + rectangle_height / 2,
+                                row * self.rectangle_height
+                                + self.rectangle_height / 2,
                                 text=dev,
                                 font=("Helvetica", 8, "bold"),
                                 fill=dev_col,
                             )
                     else:
                         self.create_text(
-                            col * rectangle_width + rectangle_width / 2,
-                            row * rectangle_height + rectangle_height / 2,
+                            col * self.rectangle_width
+                            + self.rectangle_width / 2,
+                            row * self.rectangle_height
+                            + self.rectangle_height / 2,
                             text=action_str,
                             font=("Helvetica", 8, "bold"),
                         )

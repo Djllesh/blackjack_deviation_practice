@@ -17,8 +17,8 @@ from model.rules import Rules
 BASIC_STRATEGY_PATH = Path("data/basic_strategy.pickle")
 
 if __name__ == "__main__":
-    generate_dict()
-    player = Player(init_hand=Hand(cards=["A", "8"]))
+    # generate_dict()
+    player = Player(init_hand=Hand(cards=["10", "8", "3"]))
     dealer = DealerHand.deal_initial(card="6")
     rules = Rules(soft17="H17", das="DAS")
     # player.active_hand().hit("5")
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         player=player,
         dealer=dealer,
         rules=rules,
-        true_count=-1,
+        # true_count=-1,
     )
     app = App(controller)
     app.mainloop()
