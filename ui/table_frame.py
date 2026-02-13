@@ -74,7 +74,6 @@ class TableFrame(tk.Frame):
         self.combobox_frame.grid_columnconfigure(1, weight=1)
         self.combobox_frame.grid_columnconfigure(2, weight=1)
         self.combobox_frame.grid_columnconfigure(3, weight=1)
-
         self.soft17_str = StringVar()
         self.soft17_cb = ttk.Combobox(
             self.combobox_frame, textvariable=self.soft17_str

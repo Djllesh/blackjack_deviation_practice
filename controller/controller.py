@@ -6,6 +6,7 @@ from model.rules import Rules
 from stats.database_handle import resolve_hand
 from strategy.action import Action
 from stats.result_logger import ResultLogger
+from stats.fetch_results import ResultFetcher
 
 
 class AppController:
@@ -13,6 +14,7 @@ class AppController:
         self,
         basic_strategy: defaultdict,
         logger: ResultLogger,
+        fetcher: ResultFetcher,
         *,
         rules: Rules = None,
         player: Player = None,
@@ -20,6 +22,7 @@ class AppController:
         true_count: int = None,
     ):
         self.logger = logger
+        self.fetcher = fetcher
         self.basic_strategy = basic_strategy
         self.true_count = true_count
         if rules is not None:
@@ -44,6 +47,7 @@ class AppController:
             "result_str": "",
             "wpl_str": "W/P/L\n0/0/0",
             "true_count_str": f"True count: {self.true_count}",
+            "selected_hand": "No hand selected.",
         }
 
     def get_state(self):
@@ -153,3 +157,6 @@ class AppController:
         self.set_state_players()
         self.state["buttons_enabled"] = True
         self.begin_round()
+
+    def fetch(self):
+        return self.fetcher.fetch(self.state["selected_hand"])

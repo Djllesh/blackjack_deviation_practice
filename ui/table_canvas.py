@@ -46,9 +46,7 @@ def action_to_color(action: Action):
         return "#0070c0"
 
 
-def get_base_action(
-    basic_strategy,
-    *,
+def get_key(
     dealer_upcard: int,
     player_total: int,
     hand_type: str,
@@ -58,6 +56,18 @@ def get_base_action(
         key = (player_total * 2, hand_type, dealer_upcard, ruleset)
     else:
         key = (player_total, hand_type, dealer_upcard, ruleset)
+    return key
+
+
+def get_base_action(
+    basic_strategy,
+    *,
+    dealer_upcard: int,
+    player_total: int,
+    hand_type: str,
+    ruleset: str,
+):
+    key = get_key(dealer_upcard, player_total, hand_type, ruleset)
     strategy_row = basic_strategy[key]
     return strategy_row[0]["base"]
 
@@ -124,9 +134,12 @@ class TableCanvas(tk.Canvas):
         self.cols = cols
         self.make_grid(None)
         self.bind("<Configure>", self.make_grid)
+
         self.bind("<Motion>", self.on_motion)
         self.bind("<Leave>", self.on_leave)
         self.bind("<Enter>", self.on_enter)
+        self.bind("<Button-1>", self.on_click)
+
         self.previous_active_row = None
         self.previous_active_col = None
         self.previous_active_rect = None
@@ -140,6 +153,19 @@ class TableCanvas(tk.Canvas):
         self.active_row = int(event.y / self.rectangle_height)
         self.active_col = int(event.x / self.rectangle_width)
         return True
+
+    def on_click(self, event):
+        if not self.get_position_on_grid(event):
+            return
+
+        self.controller.state["selected_hand"] = get_key(
+            dealer_upcard=dealer_upcards[self.active_col - 1],
+            player_total=self.player_totals[self.active_row - 1],
+            hand_type=get_hand_type(self.parent),
+            ruleset=self.controller.rules.ruleset_id(),
+        )
+
+        self.event_generate("<<OpenStats>>", when="tail")
 
     def on_enter(self, event):
         result = self.get_position_on_grid(event)
@@ -189,12 +215,11 @@ class TableCanvas(tk.Canvas):
         self.previous_active_rect = self.active_rect
 
     def make_grid(self, event):
+        # clear the canvas first before resizing
         self.delete("all")
         self.rectangle_width = self.parent.winfo_width() / self.cols
         self.rectangle_height = self.parent.winfo_height() / self.rows
-        # number of rows is number of hard totals + 1
         for row in range(self.rows):
-            # number of cols is number of dealer upcards + 1
             for col in range(self.cols):
                 if row == 0 and col == 0:
                     self.create_text(

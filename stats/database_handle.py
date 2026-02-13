@@ -27,9 +27,7 @@ def resolve_hand(
     )
 
     true_action = get_legal_action(
-        true_action,
-        rules,
-        player.active_hand().is_hit,
+        true_action, rules, player.active_hand().is_hit, len(player.hands) > 1
     )
     print(f"True action: {true_action}")
 
@@ -71,7 +69,7 @@ def get_true_action(strategy: list[dict], true_count: int) -> tuple:
 
 
 def get_legal_action(
-    true_action: Action, rules: Rules, was_hit: bool
+    true_action: Action, rules: Rules, was_hit: bool, was_split: bool
 ) -> Action:
     """Asserts the legality of the action if it happens to be
     two-lettered or surrendering is not allowed
@@ -79,10 +77,24 @@ def get_legal_action(
 
     if true_action == Action.DOUBLE_STAND and was_hit:
         true_action = Action.STAND
-    elif true_action == Action.DOUBLE_STAND and not was_hit:
+    elif true_action == Action.DOUBLE_STAND and not was_hit and not was_split:
         true_action = Action.DOUBLE
     elif true_action == Action.DOUBLE and was_hit:
         true_action = Action.HIT
+    elif (
+        (true_action == Action.DOUBLE or true_action == Action.DOUBLE_STAND)
+        and was_split
+        and rules.das == "DAS"
+    ):
+        true_action = Action.DOUBLE
+    elif (true_action == Action.DOUBLE) and was_split and rules.das == "noDAS":
+        true_action = Action.HIT
+    elif (
+        (true_action == Action.DOUBLE_STAND)
+        and was_split
+        and rules.das == "noDAS"
+    ):
+        true_action = Action.STAND
     elif (
         true_action == Action.SURRENDER_STAND
         and not was_hit
