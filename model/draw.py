@@ -19,5 +19,5 @@ values = {
 # TODO: Implement suits
 
 
-def draw(n: int) -> list[str]:
+def draw_random(n: int) -> list[str]:
     return [random.choice(ranks) for _ in range(n)]

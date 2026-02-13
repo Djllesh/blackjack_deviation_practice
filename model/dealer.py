@@ -1,5 +1,5 @@
 from model.hand import Hand
-from model.draw import draw
+from model.draw import draw_random
 
 
 class DealerHand(Hand):
@@ -12,10 +12,13 @@ class DealerHand(Hand):
     def deal_initial(cls, card: str = None, rule="H17"):
         if card is not None:
             return cls([card], rule)
-        return cls(draw(1), rule)
+        return cls(draw_random(1), rule)
 
-    def reset(self):
-        self.cards = draw(1)
+    def reset(self, cards: list[str] = None):
+        if cards is None:
+            self.cards = draw_random(1)
+        else:
+            self.cards = cards
         self.recompute()
 
     def get_upcard(self):

@@ -21,7 +21,7 @@ hard_totals = [
 
 class HardFrame(tk.Frame):
     def __init__(self, parent):
-        super().__init__(parent, bg="gray")
+        super().__init__(parent)
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 

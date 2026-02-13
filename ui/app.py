@@ -4,11 +4,13 @@ from ui.table_frame import TableFrame
 from ui.stats_frame import StatsFrame
 from ui.top_frame import TopFrame
 from controller.controller import AppController
+from collections import defaultdict
 
 
 class App(tk.Tk):
-    def __init__(self, controller: AppController):
+    def __init__(self, controller: AppController, images: defaultdict):
         super().__init__()
+        self.controller = controller
         self.title("Blackjack Deviation Practice")
         self.geometry("800x600")
         self.minsize(600, 600)
@@ -24,10 +26,22 @@ class App(tk.Tk):
         self.frames = {}
         for F in (PlayFrame, TableFrame, StatsFrame):
             frame_name = F.__name__
-            frame = F(self.container, controller)
+            if frame_name == "PlayFrame":
+                frame = F(self.container, self.controller, images)
+            else:
+                frame = F(self.container, self.controller)
             self.frames[frame_name] = frame
             frame.grid(row=1, column=0, sticky="nsew")
+
+        self.bind("<<OpenStats>>", self.on_open_stats)
+
         self.show_frame("PlayFrame")
+
+    def on_open_stats(self, key):
+        frame = self.frames["StatsFrame"]
+        frame.tkraise()
+        super().update()
+        frame.raised(plays=self.controller.fetch().fetchall())
 
     def show_frame(self, name):
         frame = self.frames[name]

@@ -15,8 +15,11 @@ class Player:
 
         self.active = 0
 
-    def reset(self):
-        self.hands: list[Hand] = [Hand.deal_initial()]
+    def reset(self, hands: list[Hand] = None):
+        if hands is None:
+            self.hands: list[Hand] = [Hand.deal_initial()]
+        else:
+            self.hands = hands
         self.active = 0
 
     def show_hands(self):
@@ -74,7 +77,7 @@ class Player:
 
         return True
 
-    def split(self):
+    def split(self, cards: list[str] = None):
         if not self.can_split():
             return
 
@@ -83,8 +86,10 @@ class Player:
         active_hand.cards.pop(1)
         self.hands.insert(self.active + 1, Hand([card]))
         for i in range(self.active, self.active + 2):
-            self.hands[i].hit()
-        return True
+            if cards is None:
+                self.hands[i].hit(on_split=True)
+            else:
+                self.hands[i].hit(card=cards[i], on_split=True)
 
     def can_finish(self):
         if len(self.hands) == 1 or self.active == len(self.hands) - 1:

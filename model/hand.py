@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-from model.draw import draw
+from model.draw import draw_random
 from model.total import update_total, _get_total
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ class Hand:
 
     @classmethod
     def deal_initial(cls):
-        cards = draw(2)
+        cards = draw_random(2)
         return cls(cards)
 
     def bust_update(self):
@@ -46,8 +46,9 @@ class Hand:
         else:
             return "hard"
 
-    def hit(self, card: str = None):
-        self.is_hit = True
+    def hit(self, card: str = None, on_split=False):
+        if not on_split:
+            self.is_hit = True
         # Can only hit if not busted and can only be busted if hit
         if self.busted:
             return
@@ -55,7 +56,7 @@ class Hand:
         if card is not None:
             new_card = card
         else:
-            new_card = draw(1)[0]
+            new_card = draw_random(1)[0]
         self.cards.append(new_card)
         self.value = update_total(self.cards)
         self.total = _get_total(self)

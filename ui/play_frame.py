@@ -1,12 +1,16 @@
 import tkinter as tk
 from tkinter import ttk, StringVar
 from controller.controller import AppController
+from collections import defaultdict
+from PIL import ImageTk, Image
 
 
 class PlayFrame(tk.Frame):
-    def __init__(self, parent, controller: AppController):
+    def __init__(self, parent, controller: AppController, images: defaultdict):
         super().__init__(parent)
         self.controller = controller
+        self.images = images
+
         self.player_hand_str = StringVar()
         self.dealer_hand_str = StringVar()
         self.result_str = StringVar()
@@ -14,9 +18,13 @@ class PlayFrame(tk.Frame):
         self.true_count_str = StringVar()
         self.ruleset_str = StringVar()
         self.set_strings()
+
         s = ttk.Style()
         s.configure("my.TButton", font=("Helvetica", 18))
+
         self.create_player_dealer_label()
+        self.create_dealer_card_canvas()
+        self.create_player_card_canvas()
         self.create_buttons()
         self.create_bottom_labels()
 
@@ -41,6 +49,24 @@ class PlayFrame(tk.Frame):
             self, textvariable=self.player_hand_str, font=("Helvetica", 18)
         )
         self.player_label.pack()
+
+    def create_dealer_card_canvas(self):
+        self.dealer_canvas = tk.Canvas(
+            self, width=300, height=225, relief="solid", background="white"
+        )
+        self.dealer_photo = ImageTk.PhotoImage(
+            self.images["2"][0]
+        )  # keep reference
+        self.dealer_canvas.create_image(
+            0, 0, image=self.dealer_photo, anchor="nw"
+        )
+        self.dealer_canvas.pack()
+
+    def create_player_card_canvas(self):
+        self.player_canvas = tk.Canvas(
+            self, width=self.winfo_width() - 20, height=150, bd=4
+        )
+        self.player_canvas.pack()
 
     def create_bottom_labels(self):
         self.true_count_label = tk.Label(
