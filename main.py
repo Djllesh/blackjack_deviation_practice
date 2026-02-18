@@ -21,7 +21,7 @@ BASIC_STRATEGY_PATH = Path("data/basic_strategy.pickle")
 if __name__ == "__main__":
     # generate_dict()
     player = Player(init_hand=Hand(cards=["8", "8"]))
-    dealer = DealerHand.deal_initial(card="6")
+    dealer = DealerHand.deal_initial(card="K")
     rules = Rules(soft17="H17", das="noDAS")
     player.split(["A", "A"])
 

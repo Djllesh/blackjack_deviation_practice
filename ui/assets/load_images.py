@@ -27,13 +27,13 @@ def get_key(filename: str):
     elif "10" in filename:
         return "10"
     elif "Jack" in filename:
-        return "Jack"
+        return "J"
     elif "Queen" in filename:
-        return "Queen"
+        return "Q"
     elif "King" in filename:
-        return "King"
+        return "K"
     elif "Ace" in filename:
-        return "Ace"
+        return "A"
     elif "Back" in filename:
         return "Back"
     elif "Joker" in filename:
